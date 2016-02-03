@@ -43,27 +43,67 @@
 
 \section*{Introduction}
 
-We began by implementing the project given using the provided FPGA Design and Implementation Fundamentals pdf.  This pdf showed us both the step by step implementation in ISE and a conceptual overview of the FPGA design principles.  
+In this lab, we implemented a basic floating point converter using Xilinx ISE software.  This converter takes a 12 bit signed integer and converts it to an 8 bit signed floating point number using rounding methods to keep the numbers as close to their true value as possible, as it is not possible to fully represent the full range of ints represented in a 12 bit signed integer.
 
-\begin{enumerate}[label=\alph*]
+Though the specific and immediate goal of this lab is to construct such a floating point converter, the overarching goal is to create a combinational circuit which performs the compression operation which maps a large signal to a smaller one.  This is essentially what is being done by creating the converter.
 
-\item \textbf{Design:} This is not actually performed within the Xilinx ISE.  The design is used to map out logical schematics in order to give a clear idea of the high level functionality of the module. 
+This lab was only implemented as a simulation, and in order to test it, we designed test bench files for the entire floating point converter as well as for each of the individual modules that we implemented.
 
-\item \textbf{Implementation:} After designing the overall logic of the program and figuring out certain modules? dependencies as well as their contents, this is where the actual code is written to implement the program.  For this lab, the code was already written, and the hierarchy was clearly presented in the ISE.  The overarching file was tb.v, the test bench file, followed by a uut (unit under test) named nexys3.v.  Following the uut, are the sequencer, seq.v, which consists of the ALU and register files, and uart (uart\_top.c), which consists of the interface.
+Below I have included an image with the basic inputs and outputs of our floating point converter:
 
-\item \textbf{Simulation:} For simulating the program, ISE provides the tool ISIM which simulates the behavior of the program designed before actually having to load the code to the FPGA.  Our simulation was for the the test bench file (tb.v), and we had to add specific signals to the waveform display (we used inst\_wd and inst\_vld).  After running the simulation, the output was what we expected. 
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{fpcvtModulePic.png} 
+\caption{fpcvt Module Basic Overview}
+\end{center}
+\end{figure}
 
-\item \textbf{Logic Synthesis:} In this stage, ISE uses XST to synthesize the project, essentially creating a mapping of the logic gates which will need to be used by the FPGA to actually implement the program.  The synthesis file we used was nexys3.ucf.
+As illustrated by the diagram above, the floating point converter module, called \textit{fpcvt} takes as input a 12 bit signal \textit{D} and outputs 3 separate signals, each a different component of the 8 bit floating point number that the module generates.  The first of the inputs \textit{S} is the sign bit. This bit is set to 0 when the number is positive and is set to 1 when the number is negative.  The second output generated is \textit{E}, a 3 bit signal representing the exponent component of the floating point number.  The third and final output generated is \textit{F}, a 4 bit signal representing the significand of the floating point number.  The resulting floating point number is therefore a combination of these three outputs and takes the following 8 bit form:
 
-\item \textbf{Technology Mapping:} In this stage of development, NGDBUILD in the ISE webpack is used to actually map the synthesized program to the FPGA.
-Cell Placement: In this stage, ISE uses MAP in the ISE webpack to map specific cells in the netlist to specific locations on the physical FPGA device
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{floatingPointRep.png} 
+\caption{fpcvt Module Basic Overview}
+\end{center}
+\end{figure}
 
-\item \textbf{Route:} PAR, another tool in the ISE webpack is used to determine how to connect the cells on the physical device.
+The exponent and the significand work together to represent the magnitude of the number.  The significand represents the 4 most significant bits, while the exponent's purpose is to store the power to which 2 should be placed before multiplied with the significand to obtain the final magnitude of the final floating point number.  For further explanation, the resulting floating point number generated is obtained by the following formula where \textit{V} represents the final value of the generated floating point number: 
 
-\item \textbf{Bitstream Generation: } Finally, after the cells are mapped and connected in a way suited for the physical device, a bitstream file (nexys3.bit)  is generated by the ISE webpack.  This ?.bit? file is then loaded to the physical device, and the FPGA board now can run the program on its own.
+\begin{center}
+\[ V  =  (-1)^S \times F \times 2^E \]
+\end{center}
 
+Some examples of this 8 bit floating point representation can be seen in the table below:
 
-\end{enumerate}
+\begin{center}
+\begin{tabular}{ c c c }
+
+\textbf{Floating Point Representations}
+ \textbf{Floating Point} & \textbf{Representation Formula} & \textbf{Value} \\ 
+\big[0 000 0000\big] & 0 x 20 & 0\\  
+\big[1 010 1010\big]  & -10 x 22 & -40 \\
+\big[0 011 0111\big] & 7 x 23 & 56\\
+\big[0 010 1110\big] & 14 x 22 & 56\\
+
+\end{tabular}
+\end{center}
+
+In order to correctly implement this floating point converter, there are some special cases that must be considered.  The first of which is rounding.  This will occur quite often and must be considered.  Since the converter compresses the data from 12 bits to 8 bits, there are many numbers that cannot be represented by the final 8 bit number.  Therefore, the module must be able to handle cases where such numbers are compressed, and it does so by rounding.  In the process of conversion, the 4 most significant bits are taken and placed into the significand.  The 5th most significant bit is then taken and used to consider rounding.  If this 5th bit is 1, the significand is rounded up.  If the 5th bit is a 0, the remaining bits will be truncated, thus rounding the resultant number down.  Some examples of how the module implements rounding are included in the table below:
+
+\begin{center}
+\begin{tabular}{ c c c }
+
+\textbf{Rounding Examples}
+ \textbf{Linear Encoding} & \textbf{Floating Point Encoding} & \textbf{Rounding } \\ 
+000000101100 & \big[0 010 1011\big] & Down \\
+000000101101 & \big[0 010 1011\big] & Down \\ 
+000000101110 & \big[0 010 1100\big] & Up \\
+000000101111 & \big[0 010 1100\big] & Up \\
+
+\end{tabular}
+\end{center}
+
+Another, but a more specific, outlying case that must be dealt with is when the significand is rounded up, but the significand consists of 4 1's. When this occurs, the exponent is incremented by 1 and the significand is first right shifted by 1 and then incremented by 1.  This successfully completes the rounding.  There is one even more specific case of rounding occurring when the exponent is incremented due to rounding, but it already contains all 1's. The converter module in this situation does not increment or shift either the exponent or the significand, because doing so would result in a garbage number.  This last example occurs when the input to the converter is too large of a number to be represented in 8 bit floating point form. Therefore, it logically follows that the final floating point number generated should have a magnitude with all 1's as this is the greatest possible magnitude that it is able to hold.
 
  
 %----------------------------------------------------------------------------------------
@@ -89,195 +129,11 @@ Cell Placement: In this stage, ISE uses MAP in the ISE webpack to map specific c
 \end{tabular}
 \end{center}
 
-This leads to the console output (via putty):
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{image02.jpg} % Include the image placeholder.png
-\caption{Putty console output from instructions above in exercise 2.}
-\end{center}
-\end{figure}
 
 
 %----------------------------------------------------------------------------------------
 %	SECTION 3
 %----------------------------------------------------------------------------------------
-
-\section*{Exercise 3 - Fibonacci}
-
-The  ``program'' (instructions) for the Fibonacci Sequence was stored in a .txt file and read into ISE within the test bench file (using \$readmemb).  The Fibonacci program along with translation:
-
-\begin{center}
-\begin{tabular}{ c c}
-
- \textbf{Binary} & \textbf{Sequencer Instruction} \\ 
-	0000 0000 & PUSH R0 0x0 \\	
-	0001 0001 & PUSH R1 0x1 \\
-	1100 0000	 & SEND R0 \\
-	1101 0000	 & SEND R1 \\
-	0100 0100 & ADD R0 R1 R0 \\
-	1100 0000	 & SEND R0 \\
-	01000101	& ADD R0 R1 R1 \\
-	11010001	& SEND R1 \\
-	01000100	& ADD R0 R1 R0 \\
-	11000000	& SEND R0 \\
-	01000101	& ADD R0 R1 R1 \\
-	11010001	& SEND R1 \\
-	01000100	& ADD R0 R1 R0 \\
-	11000000	& SEND R0 \\
-	01000101	& ADD R0 R1 R1 \\
-	11010001	& SEND R1 \\
-	01000100	& ADD R0 R1 R0 \\
-	11000000	& SEND R0 \\
-	01000101	& ADD R0 R1 R1 \\
-	11010001	& SEND R1 \\
-	01000100	& ADD R0 R1 R0 \\
-
- 
-\end{tabular}
-\end{center}
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{image04.png} 
-\caption{Putty console output from Fibonacci Program instructions, above in exercise 3.}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{image09.jpg} 
-\caption{ISIM UART output from Fibonacci Program instructions, above in exercise 3.}
-\end{center}
-\end{figure}
-
-%----------------------------------------------------------------------------------------
-%	SECTION 4
-%----------------------------------------------------------------------------------------
-
-\section*{Exercise 4 - Clock Enable, Instruction Valid and Register File}
-\subsection*{Clock Enable}
-
- \begin{enumerate}[label=\arabic*),ref=\arabic*]
-   \item clk\_en is a clock enable signal whose value allows (or does not allow) for the modification of the other signals: step\_d and inst\_wd.  In other words, clk\_en enables the clock which allows for the execution of instructions.
-   \item clk\_en added to the waveform in the simulation.  \textbf{clk\_en`s period = 1.3107ms}
-   
-   \begin{figure}[H]
-   \begin{center}
-\includegraphics[width=0.8\textwidth]{image01.png} 
-\caption{Waveform showing period of clk\_en}
-\end{center}
-\end{figure}
-
-\item When clk\_en is high (1), clk\_dv, which is 16 bits, has a value of 0 (0000000000000000).
-
-\item Circuit Diagram:
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{image07.png} 
-\caption{Circuit diagram illustrating relationship between clk\_en, clk\_dv, and clk\_en\_d}
-\end{center}
-\end{figure}
-  \end{enumerate}
-
-\subsection*{Instruction Valid}
- \begin{enumerate}[label=\arabic*),ref=\arabic*]
- 	\item Now move on to the signal inst\_vld. Read the relevant code and use the simulation as your aid, answer the following questions in your lab report.
-	\item In the simulation, the first time interval in which inst\_vld = \texttildelow step\_d[0] \& step\_d[1] \& clk\_en\_d evaluates to 1 is at \textbf{5.24395 ms}. 
-	\item Clk\_en\_d introduces a one clock cycle delay, so it is used instead of clk\_en so instruction execution occurs a clock cycle later.  
-	\item Another waveform capture:
-	\begin{figure}[H]
-	\begin{center}
-	\includegraphics[width=1\textwidth]{image10.jpg} 
-	\caption{A waveform capture that clearly shows the timing relationship between clk\_en, step\_d[1], step\_d[0], btnS, clk\_en\_d, and inst\_vld.}
-	\end{center}
-	\end{figure}
-	
-	\item Supporting Circuit Diagram:
-	\begin{figure}[H]
-	\begin{center}
-	\includegraphics[width=0.8\textwidth]{image08.jpg} 
-	\caption{Circuit Diagram for the above relationship illustrated by the waveform in the previous figure}
-	\end{center}
-	\end{figure}
-	
-	
-\end{enumerate}
-
-\subsection*{Register File}
-\begin{enumerate}[label=\arabic*), ref=\arabic*]
-	\item The sequencer?s register file is located in a file called seq\_rf.v. It stores the values of the four registers. Take a look at the source code and see if you can understand how it is implemented. Answer the following questions in the lab report.
-	\item The first line of code where a register is written a non-zero value is: 
-		\begin{center}
-		rf[i\_wsel] <= i\_wdata; 
-		\end{center}
-This is located in an always block, so we know this is sequential logic.  Additionally, 
-the code utilizes <= (non-blocking assignment operator) which are used in sequential circuits. 
-	\item The lines of code where the register values are read out from the register file are 
-\begin{center}
-assign o\_data\_a = rf[i\_sel\_a]; \\
-assign o\_data\_b = rf[i\_sel\_b];
-\end{center}
-These use combinatorial logic as they use the = (blocking assignment) which are used in combinatorial circuits.  Additionally, it is not located in an always block.  If we were to manually implement this readout logic, we would use a multiplexer that uses a 2-bit value. 
-
-	\item Circuit Diagram:
-	\begin{figure}[H]
-	\begin{center}
-	\includegraphics[width=1\textwidth]{image03.jpg} 
-	\caption{Register block circuit diagram}
-	\end{center}
-	\end{figure}
-	
-The above diagram begins with a demux which represents the if (rst) statement. If rst is 1, D1 will receive a signal of 1. This leads to a series of 4 muxes where the high signal will be fed in as the select of each mux. That signal is also fed into a not gate, which is then fed to each of the muxes so that they all have input 0. This makes each of the rf flip flops get the value 0, which is what happens in the code at this point if rst is true. If rst is not true, then D0 will get the high signal, which will be fed into another demux as input. The select for this demux will be i\_wstb, which represents the else if (i\_wstb) in the code. If i\_wstb is true, S1 will get a high signal and input to a channel with one demux and four muxes. The purpose of this channel is to imitate the line rf[i\_wsel] <= i\_wdata; by feeding a high signal to the multiplexer that connects to the rf correctly indexed by i\_wsel. This multiplexer will then feed i\_wdata into a multiplexer, which will have a select value that is 0 because rst was 0. The value of i\_wdata will eventually go into the intended rf flip flop. The rf boxes work similar to the component in the diagram in number 5 of the``Input Valid'' section, where the flip flops only change their values on certain inputs. The flip flops then send their data to two multiplexers with select values as i\_sel\_a and i\_sel\_b to emulate the assignments assign o\_data\_a = rf[i\_sel\_a]; and assign o\_data\_b = rf[i\_sel\_b]; to feed to the outputs.
-
-\item The first time register 3 is written with a non-zero value is at \textbf{23.594ms}. 
-	\begin{figure}[H]
-	\begin{center}
-	\includegraphics[width=1\textwidth]{image00.jpg} 
-	\caption{Waveform showing first time register 3 is written with a non-zero value}
-	\end{center}
-	\end{figure}
-
-
-	
-
-\end{enumerate}
-
-
-%----------------------------------------------------------------------------------------
-%	SECTION 5
-%----------------------------------------------------------------------------------------
-
-\section*{Exercise 5 -Nicer UART Output}
-
-\begin{enumerate}[label=\arabic*), ref=\arabic*]
-\item Below is the code taken from tb.v which sends the instructions to the UUT. It takes an 8 bit instruction as input and outputs those same 8 bits as `sw` to the UUT : 
-\begin{center}
-
-task tskRunInst; \\
-      input [7:0] inst; \\
-begin \\
-\$display (``\%d ... Running instruction \%08b'', \$stime, inst); \\
- sw = inst; \\
-\#1500000 btnS = 1; \\
-\#3000000 btnS = 0; \\
-end \\
-endtask
-\end{center}
-\item In this process, tskRunInst is the final task which outputs the instruction to the UUT,  and it is called by several other tasks: tskRunPUSH, tskRunSEND, tskRunADD, and tskRunMULT, each of which are responsible for running a unique instruction.
-  
-Nice uART output: rather than having it output byte by byte that is received, as seen in the Fibonacci sequence section above, it outputs all 4 bytes received.  The following is a screenshot of the cleaner output:
-
-	\begin{figure}[H]
-	\begin{center}
-	\includegraphics[width=0.8\textwidth]{image05.png} 
-	\caption{Cleaner UART output}
-	\end{center}
-	\end{figure}
-
-
-
-\end{enumerate}
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
