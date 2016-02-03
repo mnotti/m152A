@@ -110,30 +110,49 @@ Another, but a more specific, outlying case that must be dealt with is when the 
 %	SECTION 2
 %----------------------------------------------------------------------------------------
 
-\section*{Exercise 2 - Translate the Program}
+\section*{Design Description}
 
-\begin{center}
-\begin{tabular}{ c c}
+% TODO: Make circuit diagram
+% TODO: Make sure the figures referenced are correct
 
- \textbf{Binary} & \textbf{Sequencer Instruction} \\ 
- 0000 0100 & PUSH R0 0x4 \\  
- 0000 0000 & PUSH R0 0x0 \\
-0001 0011 & PUSH R1 0x3 \\
-1000 0110 & MULT R0 R1 R2 \\
-0110 0011 & ADD R2 R0 R3 \\
-1100 0000 & SEND R0 \\
-1101 0000 & SEND R1 \\
-1110 0000 & SEND R2 \\
-1111 0000 & SEND R3 \\
- 
-\end{tabular}
-\end{center}
+When designing the lab, we created a module for each section in figure 1. We named these modules convertToSignMag, countLeadZeros, extractLeadBits, and rounding to correspond to each of the sections in the figure. We then created a main module called fpcvt to tie all the other modules together. The implementation of the modules is described in the sections below.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{overall_design_ideas.png} 
+		\caption{Overall design ideas diagram from lab.}
+	\end{center}
+\end{figure}
+
+\subsection*{fpcvt}
+We then created a main module we named fpcvt which took in as input D, a bus of 12 wires and outputted a sign bit S, the exponent bus E, and the floating point bus F. The functionality of fpcvt essentially just followed the flow of figure 1. We decided to follow this flow because it seemed the most logical and modular approach to solving the problem. The input D was passed into convertToSignMag, which fed its output to both countLeadZeros and extractLeadBits. The output of extractLeadingBits (the significand and the fifth bit) and the output of countLeadingZeros (the exponent) were passed into the rounding module. We then assigned the output of the rounding function to E and F, the outputs of fpcvt.
+
+\subsection*{convertToSignMag}
+Our convertToSignMag module took in an 12 bit input named D2 and and has S2 and MAG as 1 and 11 bit outputs respectively. D2 represents the original 12 bit input into the fpcvt module, S2 represents the sign bit to be outputted in fpcvt, and MAG represents the unsigned magnitude of the 12 bit integer passed in. The first step in this module was creating a 12 bit reg called tempMAG which we assigned to have the same value as D2 in order to operate on D2. We then checked if D2 was equal to the bit stream 100000000000, which is the most negative number. We needed to check this because the next step is, if the number is negative, inverting the number by taking its complement and adding one. But since the integer can only represent numbers in the range -2048 to 2047, overflow will occur. In this case, we set our sign bit to 1 and our magnitude to 11111111111 and return from there. Otherwise, we checked if the sign bit was negative. If it was, we inverted tempMAG as previously mentioned. We then used a for loop to extract the 11 least significant bits in order to extract the magnitude and ignore the sign bit. In the end, we assigned the output MAG to be tempMAG and the sign bit output S2 to be D2[0] (the first bit of the input integer).
+
+\subsection*{countLeadZeros}
+The countLeadZeros module takes in MAG3 as an 11 bit input and specifies E3 as a 3 bit output. MAG3 represents the magnitude of the integer passed into the fpcvt module and E3 represents the exponent of the integer. The exponent E3 was calculated by counting the number of leading zeros, then setting E3 to the corresponding exponent value in the table below.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=.6\textwidth]{exponent_table.png} 
+		\caption{Leading zeros to exponent conversion table taken from the lab.}
+	\end{center}
+\end{figure}
+
+To count the number of leading zeros, we used a priority encoder. We utilized a switch statement to implement the priority encoder. We first checked the first leading bit. If that bit was 1, then there was 1 leading zero (including the sign bit). If it was zero, then we check the next bit. If that bit was 1, then there were 2 leading zeros, and so on. With this information, we assigned the proper exponent value to E3.
+
+\subsection*{extractLeadBits}
+This module takes in MAG4 as a 11 bit input and specifies SIG4 as a 4 bit output and FB4 as a 1 bit output where MAG4 is the same as MAG3 in countLeadZeros. SIG4 represents the significand and FB4 represents the fifth bit. To calculate SIG4 and FB4, we first needed to left shift MAG4 by the number of leading zeros (up to 7 times). We then used another priority encoder (as described under countLeadZeros) to count the number of leading zeros and to decide how many times to left shift MAG4. We then assigned SIG4 to the four must significant bits of the shifted MAG4 and FB4 to be the fifth most significant bit of the shifted MAG4.
 
 
+\subsection*{rounding}
+Our rounding module takes in E5 as a 3 bit input, SIG5 as a 4 bit input, and FB5 as a one bit input. E5 represents the exponent bus outputted by countLeadZeros and SIG5 and FB5 represent the significand bus and the fifth bit, both of which are outputted by extractLeadBits. The rounding module also specifies E6 as a 3 bit output and F6 as a 4 bit output. E6 and F6 represent the final exponent and significand values to be outputted by fpcvt. We began the module by checking if the significand was 1111 and the fifth bit was 1. This is important because when you add the two you'd get overflow, so we set a special overflow flag to be 1. In this case, we also checked to see if the exponent had the value 111 because when you add 1 to the exponent in this case you would overflow the exponent. If this case were true, we set a special flag we called "allOnes" to be true. If allOnes was true, we left the SIG5 and E5 unaltered because it was beyond what floating point could represent. If FB5 is zero, we also leave SIG5 and E5 unaltered because you just add by zero. If FB5 was one and overflow is zero, we simply added one to SIG5. If FB5 was one and the overflow bit was also one, then we shifted SIG5 right by one, added one to the exponent, and added one to the already shifted SIG5. We had to shift before we added to SIG5 because if we added first, overflow would happen and zero out SIG5. At the end, we assigned E6 and F6 to the manipulated E5 and SIG5 values.
 
 %----------------------------------------------------------------------------------------
 %	SECTION 3
 %----------------------------------------------------------------------------------------
+
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
