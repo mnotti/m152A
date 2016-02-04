@@ -43,7 +43,7 @@
 
 \section*{Introduction}
 
-In this lab, we implemented a basic floating point converter using Xilinx ISE software.  This converter takes a 12 bit signed integer and converts it to an 8 bit signed floating point number using rounding methods to keep the numbers as close to their true value as possible, as it is not possible to fully represent the full range of ints represented in a 12 bit signed integer.
+In this lab, we implemented a basic floating point converter using Xilinx ISE software.  This converter takes a 12 bit signed integer and converts it to an 8 bit signed floating point number using rounding methods to keep the numbers as close to their true value as possible, as it is not possible to fully represent the full range of ints represented in a 12 bit signed integer. \\
 
 Though the specific and immediate goal of this lab is to construct such a floating point converter, the overarching goal is to create a combinational circuit which performs the compression operation which maps a large signal to a smaller one.  This is essentially what is being done by creating the converter.
 
@@ -192,11 +192,13 @@ The rounding module in the circuit diagram above takes as input a 3 bit temporar
 
 \section*{Simulation}
 
-	The simulation portion of the lab involved several test bench files, one for each individual module, with the most thorough of the test cases falling under the overarching FPCVT.  By understanding what each module was intended to do, and thus knowing the expected output for each one, the testing simply consisted of: creating a test bench file via adding a ``testing fixture'' source, then writing example instances along with a delay in said file, and finally running through the iSIM Waveform while checking accuracy by hand. Our individual modules, which more or less acted as ``sub/helper-functions'' in order to implement the overall module of FPCVT, consisted of: convertToSignMag, countLeadZeros, extractLeadBits, and rounding.  While it may not have been the best idea, we made very simply and basic test cases for these smaller modules in order to allow us to continue to progress in a timely fashion, while still working at a timely rate.  For convertToSignMag, the input was the input data in the form of two?s compliment.  The two instantiations we tested were the integer values of 1 and -1, or D2 = 12'b000000000001 and D2 = 12'b111111111111 respectively.  We felt as though these were good, simple test cases as they were several corner cases which also tested if both our negative and positive conversion was working correctly.  As expected, the outcomes were correctly stored in S and MAG: for 1 S=0 and MAG=00000000001 and for -1 S=1 and MAG=00000000001.     
+The simulation portion of the lab involved several test bench files, one for each individual module, with the most thorough of the test cases falling under the overarching FPCVT.  By understanding what each module was intended to do, and thus knowing the expected output for each one, the testing simply consisted of: creating a test bench file via adding a ``testing fixture'' source, then writing example instances along with a delay in said file, and finally running through the iSIM Waveform while checking accuracy by hand. Our individual modules, which more or less acted as ``sub/helper-functions'' in order to implement the overall module of FPCVT, consisted of: convertToSignMag, countLeadZeros, extractLeadBits, and rounding.  While it may not have been the best idea, we made very simple and basic test cases for these smaller modules in order to allow us to continue to progress in a timely fashion, while still working at a timely rate.  \\ 
+
+For convertToSignMag, the input was the input data in the form of two's complement.  The two instantiations we tested were the integer values of 1 and -1, or D2 = 12'b000000000001 and D2 = 12'b111111111111 respectively.  We felt as though these were good, simple test cases as they were several corner cases which also tested if both our negative and positive conversion was working correctly.  As expected, the outcomes were correctly stored in S and MAG: for 1 S=0 and MAG=00000000001 and for -1 S=1 and MAG=00000000001.     
 
 \begin{figure}[H]
 	\begin{center}
-		\includegraphics[width=1\textwidth]{sim1.png} 
+		\includegraphics[width=1.2\textwidth]{sim1.png} 
 		\caption{Example testbench simulation testing convertToSignMag module}
 	\end{center}
 \end{figure}
@@ -205,10 +207,76 @@ The following simulation for countLeadZeros was by far the trickiest for our gro
 
 \begin{figure}[H]
 	\begin{center}
-		\includegraphics[width=1\textwidth]{sim2.png} 
+		\includegraphics[width=1.2\textwidth]{sim2.png} 
 		\caption{Example testbench simulation testing countLeadingZeros module}
 	\end{center}
 \end{figure}
+
+Module extractLeadBits was relatively straightforward, and similarly, so were the test cases.  Because of the simplicity of the code itself, which merely consisted of a priority encoder, we only used two test cases, which were passing in the magnitude (MAG4) as MAG4 = 11'b01101000101 and MAG4 = 11'b00000101111.  These represented relatively simple cases that assured our priority encoder was working, and both of these resulted in the expected outcomes.
+
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{extractLeadingBitsSim.png} 
+		\caption{Example testbench simulation extractLeadBits module}
+	\end{center}
+\end{figure}
+
+
+The final module (aside from the converter) was used for rounding of the floating point conversion.  We carefully tested the various corner cases (in this case, the various types of overflow) after testing a couple of very basic cases.  The cases we tested were based off of changing the exponent (E5), significand (Sig5) and fifth-bit (FB5); the cases included: [E5 = 3'b001; SIG5 = 4'b0001; FB5 = 0;] ; [E5 = 3'b001; SIG5 = 4'b0001; FB5 = 1;] ; [E5 = 3'b001; SIG5 = 4'b1111; FB5 = 1;] and [E5 = 3'b111; SIG5 = 4'b1111; FB5 = 1;].  The first two instantiations were very simple cases, simply assuring if the basic rounding was correct.  Once those were verified, we tested two major overflow conditions, one in which the exponent could had room to carry over, and the other where there was no room for adding to any input.  These covered the major corner cases, all of which eventually passed with some adjustments to the code to account for those particular cases. 
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{sim5.png} 
+		\caption{Example testbench simulation testing rounding module}
+	\end{center}
+\end{figure}
+
+Lastly, and most importantly, we tested the entire converter, FPCVT.  The major trouble we had testing this came when we believed all of our sub-modules were working correctly, when in fact countLeadZeros was not outputting what it was supposed to.  After that adjustment, our test simulations were generally correct aside from a single corner case (which was the most negative number).  We had a variety of test cases including: D = 12'b 000000101100; D = 12'b 000000101101; D = 12'b 000000101110; D = 12'b 000000101111; D = 12'b 111111111111; D = 12'b 011111111111; D = 12'b 011111000000; D = 12'b 100000000000; D = 12'b 111001011010, where D was the input.  As indicated by the images below, these test cases checked for multiple conditions including: the base case of a generic number (000000101110), negative rounding (111001011010), negative one (111111111111), the most positive number (011111111111), and the edge case (which is the one we initially missed) of 100000000000. 
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{sim3.png} 
+		\caption{Example testbench simulation testing generic number on fpcvt module}
+	\end{center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{sim4.png} 
+		\caption{Example testbench simulation testing negative rounding on fpcvt module}
+	\end{center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{sim7.png} 
+		\caption{Example testbench simulation testing negative 1 on fpcvt module}
+	\end{center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{mostPositiveSim.png} 
+		\caption{Example testbench simulation testing most positive number on fpcvt module}
+	\end{center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1.2\textwidth]{sim6.png} 
+		\caption{Example testbench simulation testing edge case on fpcvt module}
+	\end{center}
+\end{figure}
+
+\section*{Conclusion}
+
+Overall, the implementation of the converter went relatively smoothly, especially with the help of the lab manual.  By breaking down the the overall design and module of FPCVT into several modules, in our case: convertToSignMag, countLeadZeros, extractLeadBits, rounding, then using all of them in the, the process was made much clearer and easier.  Initially, we fed in the data in two's complement representation into the convertToSignMag.  That module's output was used as the input to countLeadZeros and extractLeadBits.  These output the exponent, significand, and fifth bit, which fed into the rounding process, which eventually led to the overall output. \\
+
+There were, however, several difficulties throughout the implementation.  For starters, simply trying to understand Verilog, most notably when to use wires or registers along with dealing with assignments and always blocks, took a decent amount of time.  After understanding this and implementing our first module, we wrote our own test bench instead of simply adding a ``test fixture'' source file, which led to even more time being lost.  Our final problem with ISE came with a minor mistake, but we often would run the simulation on the uut file accidentally, which led to undefined behavior.  \\
+
+Regarding the actual writing of code, the problems came from either counting the leading zeros or the various corner cases.  Most notably, the description in the lab manual for counting the leading zeros was worded oddly, which led to a confusion on what the module should actually do.  The only test case we initially failed was the case of 100000000000, but we were able to fix this in the convertToSignMag module. Aside from those issues, the lab was relatively straightforward.  
+
 
 
 %----------------------------------------------------------------------------------------
