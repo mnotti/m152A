@@ -186,6 +186,26 @@ Our rounding module takes in E5 as a 3 bit input, SIG5 as a 4 bit input, and FB5
 %	SECTION 3
 %----------------------------------------------------------------------------------------
 
+\section*{Simulation}
+
+	The simulation portion of the lab involved several test bench files, one for each individual module, with the most thorough of the test cases falling under the overarching FPCVT.  By understanding what each module was intended to do, and thus knowing the expected output for each one, the testing simply consisted of: creating a test bench file via adding a ``testing fixture'' source, then writing example instances along with a delay in said file, and finally running through the iSIM Waveform while checking accuracy by hand. Our individual modules, which more or less acted as ``sub/helper-functions'' in order to implement the overall module of FPCVT, consisted of: convertToSignMag, countLeadZeros, extractLeadBits, and rounding.  While it may not have been the best idea, we made very simply and basic test cases for these smaller modules in order to allow us to continue to progress in a timely fashion, while still working at a timely rate.  For convertToSignMag, the input was the input data in the form of two?s compliment.  The two instantiations we tested were the integer values of 1 and -1, or D2 = 12'b000000000001 and D2 = 12'b111111111111 respectively.  We felt as though these were good, simple test cases as they were several corner cases which also tested if both our negative and positive conversion was working correctly.  As expected, the outcomes were correctly stored in S and MAG: for 1 S=0 and MAG=00000000001 and for -1 S=1 and MAG=00000000001.     
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{sim1.png} 
+		\caption{Example testbench simulation testing convertToSignMag module}
+	\end{center}
+\end{figure}
+
+The following simulation for countLeadZeros was by far the trickiest for our group, as we initially had trouble understanding exactly what the output was to look like; consequently, this led to us believing our first attempt was correct which made our overall converter fail.  However, after clarifying the process for this module, we were able to produce the correct output, in which we checked many cases including: MAG3 = 11'b00000000000; MAG3 = 11'b00000000001; MAG3 = 11'b00000000010; MAG3 = 11'b00000000100; MAG3 = 11'b00000001000; MAG3 = 11'b00000010000; MAG3 = 11'b00000100000; MAG3 = 11'b10100100000; and MAG3 = 11'b11111111111.  Our initial approach led to undefined behavior, but after the fix, we were very thorough in testing this module.  All of these test cases simply represented every different number of leading zeros (from 0 to > 8) which would led to different exponents.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{sim2.png} 
+		\caption{Example testbench simulation testing countLeadingZeros module}
+	\end{center}
+\end{figure}
+
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
