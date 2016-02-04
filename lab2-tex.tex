@@ -160,6 +160,8 @@ To count the number of leading zeros, we used a priority encoder. We utilized a 
 	\end{center}
 \end{figure}
 
+The countLeadingZeros module in the circuit diagram above takes an 11 bit magnitude which is immediately split into its 11 bits.  These 11 bits then are sent into a cascade of muxes which essentially examine each bit one at a time, starting with the most significant.  As soon as a 1 bit is found, the cascade shuts down, and only the appropriate number, corresponding the appropriate amount of leading zeros, is chosen by a mux and finds its way to the 7 input OR gate, and then to the output as the 3 bit exponent.
+
 \subsection*{extractLeadBits}
 This module takes in MAG4 as a 11 bit input and specifies SIG4 as a 4 bit output and FB4 as a 1 bit output where MAG4 is the same as MAG3 in countLeadZeros. SIG4 represents the significand and FB4 represents the fifth bit. To calculate SIG4 and FB4, we first needed to left shift MAG4 by the number of leading zeros (up to 7 times). We then used another priority encoder (as described under countLeadZeros) to count the number of leading zeros and to decide how many times to left shift MAG4. We then assigned SIG4 to the four must significant bits of the shifted MAG4 and FB4 to be the fifth most significant bit of the shifted MAG4.
 
@@ -181,6 +183,8 @@ Our rounding module takes in E5 as a 3 bit input, SIG5 as a 4 bit input, and FB5
 		\caption{rounding circuit diagram}
 	\end{center}
 \end{figure}
+
+The rounding module in the circuit diagram above takes as input a 3 bit temporary exponent, a 4 bit temporary significand, and a 1 bit ``fifth bit''.  The exponent and significand are immediately incremented and sent into muxes each with their original un-incremented selves where the fifth bit input is chosen as the selector for the significand, telling the mux to use the incremented significand if 1.  The overflow of that addition is then used as the selector for the mux with the exponent and its incremented self as input.  If the significand's overflow is then also used as the selector for another mux which, if overflow is 1, sets its output equal to the original significand right shifted and incremented.  Another mux then handles the case of the exponent and significand both overflowing, resetting the outputs to all 1's. 
 
 %----------------------------------------------------------------------------------------
 %	SECTION 3
