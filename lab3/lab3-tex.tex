@@ -14,6 +14,7 @@
 \usepackage{float} %for correct image placement
 \usepackage{textcomp} % for texttildelow
 \usepackage[T1]{fontenc} % allows use of less than <
+\usepackage{booktabs} % for tables
 
 
 \setlength\parindent{0pt} % Removes all indentation from paragraphs
@@ -26,7 +27,7 @@
 %	DOCUMENT INFORMATION
 %----------------------------------------------------------------------------------------
 
-\title{M152A - Lab 3 \\ Floating Point Conversion} % Title
+\title{M152A - Lab 3 \\ Stopwatch} % Title
 
 \author{Markus \textsc{Notti} - 904269231 \\ Kyle \textsc{Baker}  - 604273748 \\ Niels \textsc{Pineda} - 604272353} % Author name
 
@@ -47,67 +48,75 @@
 %about the lab and the detailed design requirements. It?s very important to
 %make sure you are designing the right thing before starting.
 
-In this lab, we implemented a basic floating point converter using Xilinx ISE software.  This converter takes a 12 bit signed integer and converts it to an 8 bit signed floating point number using rounding methods to keep the numbers as close to their true value as possible, as it is not possible to fully represent the full range of ints represented in a 12 bit signed integer. \\
+In this lab, we implemented a basic stopwatch, and in the process, went through the complete FPGA design flow. This stopwatch is capable of counting seconds and minutes up to 99 minutes, and displaying the time on a seven segment display. We also designed the stopwatch with pause, adjustment, and direction capabilities.  
 
-Though the specific and immediate goal of this lab is to construct such a floating point converter, the overarching goal is to create a combinational circuit which performs the compression operation which maps a large signal to a smaller one.  This is essentially what is being done by creating the converter.
+The stopwatch itself was designed with 5 primary inputs: ADJ, SEL, DIR, PAUSE, and RESET.\\
 
-This lab was only implemented as a simulation, and in order to test it, we designed test bench files for the entire floating point converter as well as for each of the individual modules that we implemented.
-
-Below I have included an image with the basic inputs and outputs of our floating point converter:
+ADJ was controlled by a switch that, when set high, would put the stopwatch in adjustment mode, meaning that the stopwatch would count at a rate of 2 Hz, and depending on SEL, and DIR, either only the minutes or only the seconds would change.  This adjustment mode is the way for a user to change the stopwatch's value to a desired value. \\
 
 \begin{figure}[H]
+
 \begin{center}
-%\includegraphics[width=0.8\textwidth]{fpcvtModulePic.png} 
-\caption{fpcvt Module Basic Overview}
+\begin{tabular}{ | c | c | }
+\hline
+\textbf{ADJ} & \textbf{Action} \\ 
+\hline
+0 & Stopwatch counts normally\\
+\hline
+1 & Stopwatch enters adjustment mode and counts at 2 Hz\\
+\hline
+\end{tabular}
+
+\caption{ADJ Switch}
+
 \end{center}
 \end{figure}
 
-As illustrated by the diagram above, the floating point converter module, called \textit{fpcvt} takes as input a 12 bit signal \textit{D} and outputs 3 separate signals, each a different component of the 8 bit floating point number that the module generates.  The first of the inputs \textit{S} is the sign bit. This bit is set to 0 when the number is positive and is set to 1 when the number is negative.  The second output generated is \textit{E}, a 3 bit signal representing the exponent component of the floating point number.  The third and final output generated is \textit{F}, a 4 bit signal representing the significand of the floating point number.  The resulting floating point number is therefore a combination of these three outputs and takes the following 8 bit form:
+
+SEL was controlled by another switch, which when set high would change seconds in adjustment mode, and when set low would change minutes in adjustment mode.  Note that if ADJ is set to low, the value of SEL makes no difference.\\
 
 \begin{figure}[H]
 \begin{center}
-%\includegraphics[width=0.8\textwidth]{floatingPointRep.png} 
-\caption{fpcvt Module Basic Overview}
+\begin{tabular}{ | c | c | }
+
+\hline
+\textbf{SEL} & \textbf{Action} \\ 
+\hline
+0 & During adjustment mode, minutes change at rate of 2 Hz\\
+\hline
+1 & During adjustment mode, seconds change at rate of 2 Hz\\
+\hline
+
+\end{tabular}
+\caption{SEL Switch}
 \end{center}
 \end{figure}
 
-The exponent and the significand work together to represent the magnitude of the number.  The significand represents the 4 most significant bits, while the exponent's purpose is to store the power to which 2 should be placed before multiplied with the significand to obtain the final magnitude of the final floating point number.  For further explanation, the resulting floating point number generated is obtained by the following formula where \textit{V} represents the final value of the generated floating point number: 
+DIR was controlled by yet another switch, which when set high, would cause the stopwatch to count up from zero, and when set to low would cause the stopwatch to count down to zero.  Note that this direction controls the direction of the counting regardless of whether or not the stopwatch is in adjustment mode or not. \\
 
+\begin{figure}[H]
 \begin{center}
-\[ V  =  (-1)^S \times F \times 2^E \]
-\end{center}
+\begin{tabular}{ | c | c | }
 
-Some examples of this 8 bit floating point representation can be seen in the table below:
-
-\begin{center}
-\begin{tabular}{ c c c }
-
-\textbf{Floating Point Representations}
- \textbf{Floating Point} & \textbf{Representation Formula} & \textbf{Value} \\ 
-\big[0 000 0000\big] & 0 x 20 & 0\\  
-\big[1 010 1010\big]  & -10 x 22 & -40 \\
-\big[0 011 0111\big] & 7 x 23 & 56\\
-\big[0 010 1110\big] & 14 x 22 & 56\\
+\hline
+\textbf{DIR} & \textbf{Action} \\ 
+\hline
+0 & Stopwatch counts down to zero\\
+\hline
+1 & Stopwatch counts up from zero\\
+\hline
 
 \end{tabular}
+\caption{DIR Switch}
 \end{center}
+\end{figure}
 
-In order to correctly implement this floating point converter, there are some special cases that must be considered.  The first of which is rounding.  This will occur quite often and must be considered.  Since the converter compresses the data from 12 bits to 8 bits, there are many numbers that cannot be represented by the final 8 bit number.  Therefore, the module must be able to handle cases where such numbers are compressed, and it does so by rounding.  In the process of conversion, the 4 most significant bits are taken and placed into the significand.  The 5th most significant bit is then taken and used to consider rounding.  If this 5th bit is 1, the significand is rounded up.  If the 5th bit is a 0, the remaining bits will be truncated, thus rounding the resultant number down.  Some examples of how the module implements rounding are included in the table below:
+PAUSE was controlled by a button, which when pressed would pause the stopwatch.  In order to filter out noise and correctly pause the stopwatch, we had to implement debounce logic for this functionality which will be talked about in the design section of the lab.\\
 
-\begin{center}
-\begin{tabular}{ c c c }
+RESET was controlled by another button, which when pressed would reset the stopwatch's count to 00:00.\\
 
-\textbf{Rounding Examples}
- \textbf{Linear Encoding} & \textbf{Floating Point Encoding} & \textbf{Rounding } \\ 
-000000101100 & \big[0 010 1011\big] & Down \\
-000000101101 & \big[0 010 1011\big] & Down \\ 
-000000101110 & \big[0 010 1100\big] & Up \\
-000000101111 & \big[0 010 1100\big] & Up \\
-
-\end{tabular}
-\end{center}
-
-Another, but a more specific, outlying case that must be dealt with is when the significand is rounded up, but the significand consists of 4 1's. When this occurs, the exponent is incremented by 1 and the significand is first right shifted by 1 and then incremented by 1.  This successfully completes the rounding.  There is one even more specific case of rounding occurring when the exponent is incremented due to rounding, but it already contains all 1's. The converter module in this situation does not increment or shift either the exponent or the significand, because doing so would result in a garbage number.  This last example occurs when the input to the converter is too large of a number to be represented in 8 bit floating point form. Therefore, it logically follows that the final floating point number generated should have a magnitude with all 1's as this is the greatest possible magnitude that it is able to hold.
+While taking 5 inputs, the stopwatch had one output, the seven segment display.  This output, however, was a little bit more complex than a single output.  The seven segment display was split into 4 digits and 8 segments per digit (really making it a 32 segment display).  The main challenge we had to deal with when outputting the correct time on the display was the fact that you could only send 1 combination of segments to the display. This meant that if I wanted to display separate numbers on different digits, I could not physically do it.  With the segmented display we used on our board, it is physically impossible to display two different numbers on two different digits.\\ 
+To get around this, we displayed one digit every time a 500 Hz clock was high, cycling through all four of the digits more than 125 times a second.  This gave the illusion that the segmented display was displaying 4 different numbers simultaneously, though it wasn't really.
 
  
 %----------------------------------------------------------------------------------------
