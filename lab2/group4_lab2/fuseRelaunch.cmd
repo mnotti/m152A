@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "C:/Users/152/Desktop/aaCoolM152A/Lab2/Lab2/tb_rounding_isim_beh.exe" -prj "C:/Users/152/Desktop/aaCoolM152A/Lab2/Lab2/tb_rounding_beh.prj" "work.tb_rounding" "work.glbl" 

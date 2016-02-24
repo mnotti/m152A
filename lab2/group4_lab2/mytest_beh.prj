@@ -1,0 +1,3 @@
+verilog work "FPCVT.v"
+verilog work "mytest.v"
+verilog work "C:/Xilinx/14.6/ISE_DS/ISE//verilog/src/glbl.v"

@@ -1,0 +1,28 @@
+Command line:
+   tb_CountLeadZeros_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  51224
+
+Thu Jan 28 14:44:36 2016
+
+
+ Elaboration Time: 0.0468 sec
+
+ Current Memory Usage: 828.24 Meg
+
+ Total Signals          : 16
+ Total Nets             : 27
+ Total Signal Drivers   : 7
+ Total Blocks           : 3
+ Total Primitive Blocks : 2
+ Total Processes        : 9
+ Total Traceable Variables  : 19
+ Total Scalar Nets and Variables : 118
+
+ Total Simulation Time: 0.0468 sec
+
+ Current Memory Usage: 670.953 Meg
+
+Thu Jan 28 15:00:02 2016
+

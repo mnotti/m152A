@@ -1,0 +1,28 @@
+Command line:
+   tb_rounding_isim_beh.exe
+     -simmode  gui
+     -simrunnum  2
+     -socket  51293
+
+Thu Jan 28 14:47:03 2016
+
+
+ Elaboration Time: 0.0312 sec
+
+ Current Memory Usage: 828.24 Meg
+
+ Total Signals          : 20
+ Total Nets             : 28
+ Total Signal Drivers   : 10
+ Total Blocks           : 3
+ Total Primitive Blocks : 2
+ Total Processes        : 13
+ Total Traceable Variables  : 25
+ Total Scalar Nets and Variables : 187
+
+ Total Simulation Time: 0.0312 sec
+
+ Current Memory Usage: 1142.81 Meg
+
+Thu Jan 28 14:47:47 2016
+
