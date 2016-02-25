@@ -216,96 +216,22 @@ This module takes in a 4 bit integer and outputs the corresponding 7 segment dis
 %requirements are tested and what the test cases are), document bugs found
 %during simulation, and provide simulation waveforms. Include all simulation
 %testbench code source files.
+Unlike previous labs, we did not implement a test bench simulation file.  Initially, we attempted to create one for our various modules, but after having issues with uninitialized values, we chose to simply move on from this and test it via the actual FPGA board.  As to why the test bench file failed, we suspect it had to do with the clk input.  Regardless of the issue, we tested our stopwatch modules through the board using the synthesize and compilation process similar to Lab 1 (more specifically the: Synthesize->Translate->Map->Generate-> iMPACT).  
+	In order to simulate our modules this way, we grabbed and modified the .ucf file from Lab 1, which allowed us to map the inputs and outputs to the correct buttons, lights, and switches on the board.  Once our code was syntactically correct, we generated a .bit file in order to implement and run the program we wrote on the board. 
+	The process was generally very straightforward and smooth.  Our initial simulation effort was to light up the seven segment display; this helped us understand which values mapped to which lights allowing us to write a priority encoder of the different numbers to display.  Once that was working, we implemented clocks had to find the right speed with our fastest clock to emulate all of the 4-digits displaying at the same time without any blinking. After we had the clocks clearly working (with regards to actual, real time), we actually sped them up for testing purposes, so instead of waiting a minute to see if our minutes were decrementing correctly, we only had to wait about 30 seconds. 
+	With the general clocks working, our next simulations were all based off of the various switches.  The process was relatively the same for ADJ, SEL, DIR.  ADJ worked well initially, but it had two bugs: there was no blinking of the display, which we simply forgot to code, and adjusting the seconds would eventually lead to the minutes changing as well (as in if ADJ was increasing seconds, once it hit 59, it would increment minutes by 1) .  These were both easy cases to fix, and once ADJ was working, SEL worked perfectly without any bugs to be found.  Similarly, DIR worked without any bugs on our first implementation.  We later had to test these together with the buttons, to make sure none of them lost functionality.
+	After the switches were all working, we began testing the buttons.  We mapped the reset button to the center top button, and on testing it, it worked without any problems.  However, the Pause Button caused the most issues with simulation.  The debouncer was fidgety causing the pause to be inconsistent.  We tested multiple values for our debouncer, which was easily the most tedious portion of simulation, as reimplementing/compiling took nearly 4-5 minutes each time we adjusted these values.  Finally, after finding a value that we found consistent, we pressed the pause button over 300 times with a ~96\% success rate.  
+	Overall, the simulation process was relatively easily, but a bit tedious.  Having to wait 4-5 minutes as well as trying to check all of the various cases to make sure things worked together was very time consuming, not to mention all of the different potential combinations was troublesome to even consider.  However, these cases, including: pausing and unpausing to make sure it stopped in between the second, reset not causing arbitrary delays, and using the different buttons with various switch combinations, all worked as the assignment specified.  
 
-The simulation portion of the lab involved several test bench files, one for each individual module, with the most thorough of the test cases falling under the overarching FPCVT.  By understanding what each module was intended to do, and thus knowing the expected output for each one, the testing simply consisted of: creating a test bench file via adding a ``testing fixture'' source, then writing example instances along with a delay in said file, and finally running through the iSIM Waveform while checking accuracy by hand. Our individual modules, which more or less acted as ``sub/helper-functions'' in order to implement the overall module of FPCVT, consisted of: convertToSignMag, countLeadZeros, extractLeadBits, and rounding.  While it may not have been the best idea, we made very simple and basic test cases for these smaller modules in order to allow us to continue to progress in a timely fashion, while still working at a timely rate.  \\ 
-
-For convertToSignMag, the input was the input data in the form of two's complement.  The two instantiations we tested were the integer values of 1 and -1, or D2 = 12'b000000000001 and D2 = 12'b111111111111 respectively.  We felt as though these were good, simple test cases as they were several corner cases which also tested if both our negative and positive conversion was working correctly.  As expected, the outcomes were correctly stored in S and MAG: for 1 S=0 and MAG=00000000001 and for -1 S=1 and MAG=00000000001.     
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim1.png} 
-		\caption{Example testbench simulation testing convertToSignMag module}
-	\end{center}
-\end{figure}
-
-The following simulation for countLeadZeros was by far the trickiest for our group, as we initially had trouble understanding exactly what the output was to look like; consequently, this led to us believing our first attempt was correct which made our overall converter fail.  However, after clarifying the process for this module, we were able to produce the correct output, in which we checked many cases including: MAG3 = 11'b00000000000; MAG3 = 11'b00000000001; MAG3 = 11'b00000000010; MAG3 = 11'b00000000100; MAG3 = 11'b00000001000; MAG3 = 11'b00000010000; MAG3 = 11'b00000100000; MAG3 = 11'b10100100000; and MAG3 = 11'b11111111111.  Our initial approach led to undefined behavior, but after the fix, we were very thorough in testing this module.  All of these test cases simply represented every different number of leading zeros (from 0 to > 8) which would led to different exponents.
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim2.png} 
-		\caption{Example testbench simulation testing countLeadingZeros module}
-	\end{center}
-\end{figure}
-
-Module extractLeadBits was relatively straightforward, and similarly, so were the test cases.  Because of the simplicity of the code itself, which merely consisted of a priority encoder, we only used two test cases, which were passing in the magnitude (MAG4) as MAG4 = 11'b01101000101 and MAG4 = 11'b00000101111.  These represented relatively simple cases that assured our priority encoder was working, and both of these resulted in the expected outcomes.
-
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{extractLeadingBitsSim.png} 
-		\caption{Example testbench simulation extractLeadBits module}
-	\end{center}
-\end{figure}
-
-
-The final module (aside from the converter) was used for rounding of the floating point conversion.  We carefully tested the various corner cases (in this case, the various types of overflow) after testing a couple of very basic cases.  The cases we tested were based off of changing the exponent (E5), significand (Sig5) and fifth-bit (FB5); the cases included: [E5 = 3'b001; SIG5 = 4'b0001; FB5 = 0;] ; [E5 = 3'b001; SIG5 = 4'b0001; FB5 = 1;] ; [E5 = 3'b001; SIG5 = 4'b1111; FB5 = 1;] and [E5 = 3'b111; SIG5 = 4'b1111; FB5 = 1;].  The first two instantiations were very simple cases, simply assuring if the basic rounding was correct.  Once those were verified, we tested two major overflow conditions, one in which the exponent could had room to carry over, and the other where there was no room for adding to any input.  These covered the major corner cases, all of which eventually passed with some adjustments to the code to account for those particular cases. 
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim5.png} 
-		\caption{Example testbench simulation testing rounding module}
-	\end{center}
-\end{figure}
-
-Lastly, and most importantly, we tested the entire converter, FPCVT.  The major trouble we had testing this came when we believed all of our sub-modules were working correctly, when in fact countLeadZeros was not outputting what it was supposed to.  After that adjustment, our test simulations were generally correct aside from a single corner case (which was the most negative number).  We had a variety of test cases including: D = 12'b 000000101100; D = 12'b 000000101101; D = 12'b 000000101110; D = 12'b 000000101111; D = 12'b 111111111111; D = 12'b 011111111111; D = 12'b 011111000000; D = 12'b 100000000000; D = 12'b 111001011010, where D was the input.  As indicated by the images below, these test cases checked for multiple conditions including: the base case of a generic number (000000101110), negative rounding (111001011010), negative one (111111111111), the most positive number (011111111111), and the edge case (which is the one we initially missed) of 100000000000. 
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim3.png} 
-		\caption{Example testbench simulation testing generic number on fpcvt module}
-	\end{center}
-\end{figure}
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim4.png} 
-		\caption{Example testbench simulation testing negative rounding on fpcvt module}
-	\end{center}
-\end{figure}
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim7.png} 
-		\caption{Example testbench simulation testing negative 1 on fpcvt module}
-	\end{center}
-\end{figure}
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{mostPositiveSim.png} 
-		\caption{Example testbench simulation testing most positive number on fpcvt module}
-	\end{center}
-\end{figure}
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1.2\textwidth]{sim6.png} 
-		\caption{Example testbench simulation testing edge case on fpcvt module}
-	\end{center}
-\end{figure}
 
 \section*{Conclusion}
+
 
 %Conclusion (5%). Summary of the design. Difficulties you encountered, and
 %how you dealt with them. General suggestions for improving the lab, if any.
 
-Overall, the implementation of the converter went relatively smoothly, especially with the help of the lab manual.  By breaking down the the overall design and module of FPCVT into several modules, in our case: convertToSignMag, countLeadZeros, extractLeadBits, rounding, then using all of them in the, the process was made much clearer and easier.  Initially, we fed in the data in two's complement representation into the convertToSignMag.  That module's output was used as the input to countLeadZeros and extractLeadBits.  These output the exponent, significand, and fifth bit, which fed into the rounding process, which eventually led to the overall output. \\
-
-There were, however, several difficulties throughout the implementation.  For starters, simply trying to understand Verilog, most notably when to use wires or registers along with dealing with assignments and always blocks, took a decent amount of time.  After understanding this and implementing our first module, we wrote our own test bench instead of simply adding a ``test fixture'' source file, which led to even more time being lost.  Our final problem with ISE came with a minor mistake, but we often would run the simulation on the uut file accidentally, which led to undefined behavior.  \\
-
-Regarding the actual writing of code, the problems came from either counting the leading zeros or the various corner cases.  Most notably, the description in the lab manual for counting the leading zeros was worded oddly, which led to a confusion on what the module should actually do.  The only test case we initially failed was the case of 100000000000, but we were able to fix this in the convertToSignMag module. Aside from those issues, the lab was relatively straightforward.  
-
-
+Overall, our stopwatch design worked well, but the code itself was rather messy.  This could have been averted had we used more modules, but by the time things started getting more intricate, it wouldn't have made sense to go back and clean up what was already working.  The actual difficulties we encountered were almost all due to the debouncer for the pause button as well as the time it took to simply implement our program on the FPGA board.  Regarding the pause button: sometimes, it would be incredibly accurate, only to become less accurate the next day.  Part of this may have been which board we used (as the board the TA provided worked far more consistently), but overall, with consistent, solid presses, the pause button worked well.  
+	Realistically, the only way to deal with the problem of long compilation times was by being patient.  Early on when there were still several things to implement, we would synthesize and compile, and while this was going on, we would start writing code for the next stopwatch feature.  All in all, this lab doesn't need much adjustment, however, being clearer on the various corner cases in the spec would have been helpful. 
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
