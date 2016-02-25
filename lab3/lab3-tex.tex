@@ -160,6 +160,51 @@ Another critical feature we had to implement in order to get our pause button wo
 
 To implement our debounce logic, we added another counter to our clock module, which took as input the pause button, in addition to the 100 MHz clock.  The program then, inside the clock module, checks if the pause button is high.  If high, it increments a counter until a value of 3,000,000 is reached.  If the max value has been reached and the pause button input is still high, in other words, if the pause button remains high for 3,000,000 counts of the 100 MHz clock (3/10 of a sec), then the counters in the clock module stop, stopping all logic.  The stopwatch effectively freezes in pause mode until the same sustained high is measured as input from the pause button, thereby resuming the clocks and resuming the stopwatch.
 
+\subsection*{Digital Logic Design}
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{main.png} 
+		\caption{Digital Logic Design}
+	\end{center}
+\end{figure}
+
+The above figure depicts the overall logic design of our circuit. The outputs a-g and p represent the segments to be lit up on the 7-segment display. The output min tens, min ones, sec tens, and sec ones represent which of the four screens on the 7-segment display should be activated where 0 corresponds with being lit up. In this figure, I black-boxed 4 components: clk, segSelector, select4bits, and 7seg. Diagrams for these components are shown below. This module uses two counters to count the minutes and seconds. The minutes are triggered by the seconds reaching 60, at which point the seconds counter overflows back to 0. Another counter is used to simulate a 1 Hz clock by controlling it with a 2 Hz clock. When reset is triggered, seconds and minutes are reset to 0, and the clock is reset back to zero as well. Pause is fed into the clock module, which will pause the 2 hz clock so that the seconds and minutes will never increment. The counter at the bottom of the screen is used to make the display blink when adjust is on. It will make the display be all 1's (all off) during a certian count, and then it will make the screen display regularly otherwise. Adjust being on will also make the seconds or minutes (depending on the select bit) increment with the 2 Hz clock. This is implemented by feeding the 1 Hz and 2 Hz clock into multiplexers, with adjust as the select bit. The output of these multiplexers goes to the clock of the counter.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{clk.png} 
+		\caption{Clock module logic}
+	\end{center}
+\end{figure}
+
+This clock module takes in reset, pause, and the 100 MHz clock as input and uses counters to output a 2 Hz clock and another clock that is much faster. The counter resets after it counts to its desired Hz. A comparator is used to tell when the counter has reached a certian number. When reset is triggered, the counter will be reset to zero, and when pause is triggered, the counter will not increase.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{segSelector.png} 
+		\caption{Segment selector logic}
+	\end{center}
+\end{figure}
+
+This module selects which of the four screens should display a digit on the seven segment display. It takes in the faster clock as an input. The output includes four bits, each bit corresponding to a screen where a 0 signifies that the screen should be lit up. The module also outputs a 2 bit integer which represents the screen number (0-3) that is being lit up this clock cycle. This module uses a counter that counts 0-3 and resets to 0 when it gets to 3 to determine which screen to light up.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{select4bits.png} 
+		\caption{Integer to display logic}
+	\end{center}
+\end{figure}
+
+This module takes in as input two 8 bit integers representing the number of seconds and the number of minutes. These are fed into a divider, which essentially gets the ones and tens digits of these numbers. So we feed in the ones and tens digits of the seconds and minutes into the multiplexer, with the two bit screen integer from the segment selector module as the selector. The output is not a 4 bit integer which represents a number 0-9 to be represented on the 7 segment display. 
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{7seg.png} 
+		\caption{Four bit integer to 7 segment logic}
+	\end{center}
+\end{figure}
+
+This module takes in a 4 bit integer and outputs the corresponding 7 segment display bits. The 4 bit integer is used as a selector and the left side of the multiplexer takes in 10 constants. These constants correspond to the 10 bit streams on the top of the circuit diagram. The rest are don't cares because the multiplexor should not ever get a selector that is not in the range of 0-9.
 
 %----------------------------------------------------------------------------------------
 %	SECTION 3
