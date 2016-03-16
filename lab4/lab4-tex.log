@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  16 MAR 2016 03:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  16 MAR 2016 14:52
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -944,24 +944,37 @@ Underfull \hbox (badness 10000) in paragraph at lines 120--124
 
  []
 
-[4] [5] [6] [7] [8] (./lab4-tex.aux) ) 
+[4] <vgaOut.png, id=22, 771.88374pt x 465.74pt>
+File: vgaOut.png Graphic file (type png)
+ <use vgaOut.png>
+Package pdftex.def Info: vgaOut.png used on input line 134.
+(pdftex.def)             Requested size: 345.0pt x 208.16684pt.
+
+<vgaBlackBox.png, id=23, 506.89375pt x 259.97125pt>
+File: vgaBlackBox.png Graphic file (type png)
+ <use vgaBlackBox.png>
+Package pdftex.def Info: vgaBlackBox.png used on input line 143.
+(pdftex.def)             Requested size: 345.0pt x 176.94472pt.
+
+[5 <./vgaOut.png>] [6 <./vgaBlackBox.png>] (./lab4-tex.aux) ) 
 Here is how much of TeX's memory you used:
- 13931 strings out of 493089
- 291332 string characters out of 6134842
- 320483 words of memory out of 5000000
- 17264 multiletter control sequences out of 15000+600000
+ 13941 strings out of 493089
+ 291495 string characters out of 6134842
+ 316483 words of memory out of 5000000
+ 17272 multiletter control sequences out of 15000+600000
  49269 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 42i,6n,41p,10436b,532s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texlive/2015/texmf-dist/fonts
-/enc/dvips/base/8r.enc}</usr/local/texlive/2015/texmf-dist/fonts/type1/urw/time
-s/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmbi8a.
-pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/
-local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on lab4-tex.pdf (8 pages, 112385 bytes).
+ 42i,6n,41p,10436b,534s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texliv
+e/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/texlive/2015/texmf-di
+st/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/t
+ype1/urw/times/utmbi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/
+times/utmr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr
+i8a.pfb>
+Output written on lab4-tex.pdf (6 pages, 159133 bytes).
 PDF statistics:
- 51 PDF objects out of 1000 (max. 8388607)
- 34 compressed objects within 1 object stream
+ 47 PDF objects out of 1000 (max. 8388607)
+ 28 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 6 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 16 words of extra memory for PDF output out of 10000 (max. 10000000)
 

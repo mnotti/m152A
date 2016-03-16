@@ -127,50 +127,26 @@ Like the tank module mentioned above, the same problem was occurring for us, so 
 The collision detector module, as the name suggests, was responsible for monitoring the positions of the tank modules and the projectile modules and listening for any overlap.  It was also responsible for relaying that information to the rest of the program. It simply would take in as input all of the positions of the objects mentioned above and check for overlap.  If there was overlap, it would simply set a t1\_col flag to 1 or a t2\_col flag to 1 depending on which tank was hit.  The projectile module would pick up this flag and reset, and the seven segment controller module would also pick up this flag and update the health of the tanks on the display accordingly.
 
 \subsection*{Digital Logic Design}
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1\textwidth]{main.png} 
-		\caption{Digital Logic Design}
-	\end{center}
-\end{figure}
 
-The above figure depicts the overall logic design of our circuit. The outputs a-g and p represent the segments to be lit up on the 7-segment display. The output min tens, min ones, sec tens, and sec ones represent which of the four screens on the 7-segment display should be activated where 0 corresponds with being lit up. In this figure, I black-boxed 4 components: clk, segSelector, select4bits, and 7seg. Diagrams for these components are shown below. This module uses two counters to count the minutes and seconds. The minutes are triggered by the seconds reaching 60, at which point the seconds counter overflows back to 0. Another counter is used to simulate a 1 Hz clock by controlling it with a 2 Hz clock. When reset is triggered, seconds and minutes are reset to 0, and the clock is reset back to zero as well. Pause is fed into the clock module, which will pause the 2 hz clock so that the seconds and minutes will never increment. The counter at the bottom of the screen is used to make the display blink when adjust is on. It will make the display be all 1's (all off) during a certian count, and then it will make the screen display regularly otherwise. Adjust being on will also make the seconds or minutes (depending on the select bit) increment with the 2 Hz clock. This is implemented by feeding the 1 Hz and 2 Hz clock into multiplexers, with adjust as the select bit. The output of these multiplexers goes to the clock of the counter.
 
 \begin{figure}[H]
 	\begin{center}
-		%\includegraphics[width=1\textwidth]{clk.png} 
-		\caption{Clock module logic}
+		\includegraphics[width=1\textwidth]{vgaOut} 
+		\caption{VGA module logic}
 	\end{center}
 \end{figure}
 
-This clock module takes in reset, pause, and the 100 MHz clock as input and uses counters to output a 2 Hz clock and another clock that is much faster. The counter resets after it counts to its desired Hz. A comparator is used to tell when the counter has reached a certian number. When reset is triggered, the counter will be reset to zero, and when pause is triggered, the counter will not increase.
+This vga module takes in the t1X, t1Y, t2X, t2Y, p1X, p1Y, p2X, p2Y, t1H and t2H as input and outputs Hsync, Vsync, red, green and blue. A 25MHz clock is also input and drives the two counter registers that you can see in the top left of the above diagram.  For simplicity's sake, the clock is not included in the image above. The above image is the digital design logic for the VGA controller module.
 
 \begin{figure}[H]
 	\begin{center}
-		%\includegraphics[width=1\textwidth]{segSelector.png} 
-		\caption{Segment selector logic}
+		\includegraphics[width=1\textwidth]{vgaBlackBox} 
+		\caption{VGA black box 1}
 	\end{center}
 \end{figure}
 
-This module selects which of the four screens should display a digit on the seven segment display. It takes in the faster clock as an input. The output includes four bits, each bit corresponding to a screen where a 0 signifies that the screen should be lit up. The module also outputs a 2 bit integer which represents the screen number (0-3) that is being lit up this clock cycle. This module uses a counter that counts 0-3 and resets to 0 when it gets to 3 to determine which screen to light up.
+The above image is the digital design logic for a black box included in the diagram showing the logic for the VGA controller module.  The circuit in the image above corresponds to the long rectangular module in the VGA diagram.
 
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1\textwidth]{select4bits.png} 
-		\caption{Integer to display logic}
-	\end{center}
-\end{figure}
-
-This module takes in as input two 8 bit integers representing the number of seconds and the number of minutes. These are fed into a divider, which essentially gets the ones and tens digits of these numbers. So we feed in the ones and tens digits of the seconds and minutes into the multiplexer, with the two bit screen integer from the segment selector module as the selector. The output is not a 4 bit integer which represents a number 0-9 to be represented on the 7 segment display. 
-
-\begin{figure}[H]
-	\begin{center}
-		%\includegraphics[width=1\textwidth]{7seg.png} 
-		\caption{Four bit integer to 7 segment logic}
-	\end{center}
-\end{figure}
-
-This module takes in a 4 bit integer and outputs the corresponding 7 segment display bits. The 4 bit integer is used as a selector and the left side of the multiplexer takes in 10 constants. These constants correspond to the 10 bit streams on the top of the circuit diagram. The rest are don't cares because the multiplexor should not ever get a selector that is not in the range of 0-9.
 
 %----------------------------------------------------------------------------------------
 %	SECTION 3
@@ -182,12 +158,6 @@ This module takes in a 4 bit integer and outputs the corresponding 7 segment dis
 %requirements are tested and what the test cases are), document bugs found
 %during simulation, and provide simulation waveforms. Include all simulation
 %testbench code source files.
-Unlike previous labs, we did not implement a test bench simulation file.  Initially, we attempted to create one for our various modules, but after having issues with uninitialized values, we chose to simply move on from this and test it via the actual FPGA board.  As to why the test bench file failed, we suspect it had to do with the clk input.  Regardless of the issue, we tested our stopwatch modules through the board using the synthesize and compilation process similar to Lab 1 (more specifically the: Synthesize->Translate->Map->Generate-> iMPACT).  
-	In order to simulate our modules this way, we grabbed and modified the .ucf file from Lab 1, which allowed us to map the inputs and outputs to the correct buttons, lights, and switches on the board.  Once our code was syntactically correct, we generated a .bit file in order to implement and run the program we wrote on the board. 
-	The process was generally very straightforward and smooth.  Our initial simulation effort was to light up the seven segment display; this helped us understand which values mapped to which lights allowing us to write a priority encoder of the different numbers to display.  Once that was working, we implemented clocks had to find the right speed with our fastest clock to emulate all of the 4-digits displaying at the same time without any blinking. After we had the clocks clearly working (with regards to actual, real time), we actually sped them up for testing purposes, so instead of waiting a minute to see if our minutes were decrementing correctly, we only had to wait about 30 seconds. 
-	With the general clocks working, our next simulations were all based off of the various switches.  The process was relatively the same for ADJ, SEL, DIR.  ADJ worked well initially, but it had two bugs: there was no blinking of the display, which we simply forgot to code, and adjusting the seconds would eventually lead to the minutes changing as well (as in if ADJ was increasing seconds, once it hit 59, it would increment minutes by 1) .  These were both easy cases to fix, and once ADJ was working, SEL worked perfectly without any bugs to be found.  Similarly, DIR worked without any bugs on our first implementation.  We later had to test these together with the buttons, to make sure none of them lost functionality.
-	After the switches were all working, we began testing the buttons.  We mapped the reset button to the center top button, and on testing it, it worked without any problems.  However, the Pause Button caused the most issues with simulation.  The debouncer was fidgety causing the pause to be inconsistent.  We tested multiple values for our debouncer, which was easily the most tedious portion of simulation, as reimplementing/compiling took nearly 4-5 minutes each time we adjusted these values.  Finally, after finding a value that we found consistent, we pressed the pause button over 300 times with a ~96\% success rate.  
-	Overall, the simulation process was relatively easily, but a bit tedious.  Having to wait 4-5 minutes as well as trying to check all of the various cases to make sure things worked together was very time consuming, not to mention all of the different potential combinations was troublesome to even consider.  However, these cases, including: pausing and unpausing to make sure it stopped in between the second, reset not causing arbitrary delays, and using the different buttons with various switch combinations, all worked as the assignment specified.  
 
 
 \section*{Conclusion}
@@ -195,9 +165,6 @@ Unlike previous labs, we did not implement a test bench simulation file.  Initia
 
 %Conclusion (5%). Summary of the design. Difficulties you encountered, and
 %how you dealt with them. General suggestions for improving the lab, if any.
-
-Overall, our stopwatch design worked well, but the code itself was rather messy.  This could have been averted had we used more modules, but by the time things started getting more intricate, it wouldn't have made sense to go back and clean up what was already working.  The actual difficulties we encountered were almost all due to the debouncer for the pause button as well as the time it took to simply implement our program on the FPGA board.  Regarding the pause button: sometimes, it would be incredibly accurate, only to become less accurate the next day.  Part of this may have been which board we used (as the board the TA provided worked far more consistently), but overall, with consistent, solid presses, the pause button worked well.  
-	Realistically, the only way to deal with the problem of long compilation times was by being patient.  Early on when there were still several things to implement, we would synthesize and compile, and while this was going on, we would start writing code for the next stopwatch feature.  All in all, this lab doesn't need much adjustment, however, being clearer on the various corner cases in the spec would have been helpful. 
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
