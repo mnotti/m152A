@@ -1,0 +1,28 @@
+Command line:
+   clk_tb_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  51072
+
+Thu Feb 04 15:15:34 2016
+
+
+ Elaboration Time: 0.0624 sec
+
+ Current Memory Usage: 828.24 Meg
+
+ Total Signals          : 21
+ Total Nets             : 28
+ Total Signal Drivers   : 10
+ Total Blocks           : 4
+ Total Primitive Blocks : 2
+ Total Processes        : 14
+ Total Traceable Variables  : 28
+ Total Scalar Nets and Variables : 252
+
+ Total Simulation Time: 0.109201 sec
+
+ Current Memory Usage: 1142.81 Meg
+
+Thu Feb 04 15:16:25 2016
+

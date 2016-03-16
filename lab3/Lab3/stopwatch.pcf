@@ -1,0 +1,51 @@
+//! **************************************************************************
+// Written by: Map P.68d on Wed Feb 17 16:43:31 2016
+//! **************************************************************************
+
+SCHEMATIC START;
+COMP "adj" LOCATE = SITE "T10" LEVEL 1;
+COMP "clk" LOCATE = SITE "V10" LEVEL 1;
+COMP "dir" LOCATE = SITE "V9" LEVEL 1;
+COMP "sel" LOCATE = SITE "T9" LEVEL 1;
+COMP "pauseButton" LOCATE = SITE "B8" LEVEL 1;
+COMP "an<0>" LOCATE = SITE "N16" LEVEL 1;
+COMP "an<1>" LOCATE = SITE "N15" LEVEL 1;
+COMP "an<2>" LOCATE = SITE "P18" LEVEL 1;
+COMP "an<3>" LOCATE = SITE "P17" LEVEL 1;
+COMP "seg<0>" LOCATE = SITE "T17" LEVEL 1;
+COMP "seg<1>" LOCATE = SITE "T18" LEVEL 1;
+COMP "seg<2>" LOCATE = SITE "U17" LEVEL 1;
+COMP "seg<3>" LOCATE = SITE "U18" LEVEL 1;
+COMP "seg<4>" LOCATE = SITE "M14" LEVEL 1;
+COMP "seg<5>" LOCATE = SITE "N14" LEVEL 1;
+COMP "seg<6>" LOCATE = SITE "L14" LEVEL 1;
+COMP "seg<7>" LOCATE = SITE "M13" LEVEL 1;
+COMP "rstButton" LOCATE = SITE "A8" LEVEL 1;
+TIMEGRP sys_clk_pin = BEL "ck/counter2_0" BEL "ck/pause_count_21" BEL
+        "ck/pause_count_20" BEL "ck/pause_count_19" BEL "ck/pause_count_18"
+        BEL "ck/pause_count_17" BEL "ck/pause_count_16" BEL
+        "ck/pause_count_15" BEL "ck/pause_count_14" BEL "ck/pause_count_13"
+        BEL "ck/pause_count_12" BEL "ck/pause_count_11" BEL
+        "ck/pause_count_10" BEL "ck/pause_count_9" BEL "ck/pause_count_8" BEL
+        "ck/pause_count_7" BEL "ck/pause_count_6" BEL "ck/pause_count_5" BEL
+        "ck/pause_count_4" BEL "ck/pause_count_3" BEL "ck/pause_count_2" BEL
+        "ck/pause_count_1" BEL "ck/pause_count_0" BEL "ck/counter1_25" BEL
+        "ck/counter1_24" BEL "ck/counter1_23" BEL "ck/counter1_22" BEL
+        "ck/counter1_21" BEL "ck/counter1_20" BEL "ck/counter1_19" BEL
+        "ck/counter1_17" BEL "ck/counter1_16" BEL "ck/counter1_18" BEL
+        "ck/counter1_15" BEL "ck/counter1_14" BEL "ck/counter1_13" BEL
+        "ck/counter1_12" BEL "ck/counter1_11" BEL "ck/counter1_10" BEL
+        "ck/counter1_8" BEL "ck/counter1_7" BEL "ck/counter1_9" BEL
+        "ck/counter1_6" BEL "ck/counter1_5" BEL "ck/counter1_3" BEL
+        "ck/counter1_2" BEL "ck/counter1_4" BEL "ck/counter1_1" BEL
+        "ck/counter1_0" BEL "ck/counter2_17" BEL "ck/counter2_16" BEL
+        "ck/counter2_15" BEL "ck/counter2_13" BEL "ck/counter2_12" BEL
+        "ck/counter2_14" BEL "ck/counter2_11" BEL "ck/counter2_10" BEL
+        "ck/counter2_9" BEL "ck/counter2_8" BEL "ck/counter2_7" BEL
+        "ck/counter2_6" BEL "ck/counter2_4" BEL "ck/counter2_3" BEL
+        "ck/counter2_5" BEL "ck/counter2_2" BEL "ck/counter2_1" BEL
+        "ck/paused_0" BEL "ck/temp_hz2" BEL "ck/temp_hz_big" BEL
+        "clk_BUFGP/BUFG";
+TS_sys_clk_pin = PERIOD TIMEGRP "sys_clk_pin" 100 MHz HIGH 50%;
+SCHEMATIC END;
+
