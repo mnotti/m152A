@@ -128,6 +128,87 @@ The collision detector module, as the name suggests, was responsible for monitor
 
 \subsection*{Digital Logic Design}
 
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{game.png} 
+		\caption{Game module logic}
+	\end{center}
+\end{figure}
+
+The above image shows the top game module we had. It was broken down into seven distinct modules: a clock, tankLeft, tankRight, projectileLeft, projectileRight, collisionDetector, sevenSeg, and vga. Each of these modules will be described in detail below. The game module takes in 12 inputs. These inputs are a clock, a switch representing a game reset, and 5 buttons for each player (left, right, angle up, angle down, and fire). The clock module takes in a 100 MHz clock and outputs three seperate clocks, one to be used in the tank and projectile modules (slowest), one for the collision detector and seven segment display modules (next fastest), and the fastest clock for the vga module. The tank modules outputs the location of the tanks to three places: the vga module, the projectile module, and the collision detection module. It also outputs its angle to the projectile module. The projectile motion module takes in the fire button as input and the location of the tank. It also takes in output from the collision detection module to tell when the projectile has hit a tank. When a projectile is fired, it starts its motion. It will then output its location to the vga and collision detection modules. The projectile module also keeps track of tank health, which is outputted to the vga and seven segment display modules. The seven segment display module takes in tank healths as input and outputs to the seven segment display on the board. The vga module takes in tank and projectile location information to display the objects on screen as output. It will also take in tank health from the projectile modules.
+
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{clock.png} 
+		\caption{Clock module logic}
+	\end{center}
+\end{figure}
+
+Our clock module takes in a 100 MHz clock and uses that to output three seperate clocks. We used counters that overflow to simulate the different speed clocks. When the counters overflow (i.e. they equal zero), we output a high signal for the clock.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{tank.png} 
+		\caption{Tank module logic}
+	\end{center}
+\end{figure}
+
+The tank takes in inputs from 4 buttons, angleUp, angleDown, moveLeft, moveRight. It also takes in a clock and a reset signal. To calculate the tank's x location, We used a counter. This register was incremented when the moveRight signal was high (increase x value), and decremented when the moveLeft signal was high (decrease x value). Comparators are used to make sure the tank never moves past a certian threshold (off the screen or on the other tank's side of the screen). The same basic thinking applies to the design of the angle calculator. A counter was used, with comparators used to make sure the angle never passed its minimum or maximum values. Muxes are used to simulate if, else if, else statements here. The tank's y location is kept constant as the tank itself can't ever move up or down. In our implementation, we had two seperate tank modules. The only differences were the constants used to determine tank movement boundaries and initial starting location.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{projectile.png} 
+		\caption{Projectile module logic}
+	\end{center}
+\end{figure}
+
+The projectile module takes in the tank's x and y location, the angle the tank is pointing at, the fired bit, a colision bit, the reset flag, and a clock. It outputs it's x and y location and the opposing tank's health. This digital logic implementation makes use of three black box modules, the velocity module, the init logic module, and the power module which are described below. The power module both acts as a debouncer and as a power gague for the stregth of the shot. It'll output a three bit wire, representing how strong the shot is. We have a register named init. This register helps determine when to update a projectile's location. It basically keeps track of when a projectile has already been fired. If a projectile has not been fired, but the output from the power module is not zero (the fire button has been pressed), we want to update the x0, y0, and angle values that will be used in projectile motion equations to be those that are input from the tank module. The logic updating the init value was given it's own module. When the projectile fires, we change init to be 1. While init is 1, we don't update the x0, y0, or angle registers, because those should be constant throughout the projectile's motion, despite where the tank moves. The angles are passed into the velocity module, which essentially use a series of MUXes to decide what the base x and y velocities of the projectile should be. The adders, multipliers, and subtracters are used to calculate the projectile motion equations, which eventually become output. If the projectile is off screen or if it collides with a tank, the projectile location is set just off screen so it is not displayed by the vga module. This module also keeps track of the opposing tank's health. The logic for this is shown at the bottom of the figure with the t2h register. A MUX leads into this register. This MUX will make the register's value get reset back to 99 when the reset flag is true. Otherwise, on a colision, t2h's value is passed to a subtractor to decrement the value by seven. A comparator is used to make sure the health value never dips below 0. In out implementation, we had two seperate modules, the only difference being that one had negative x velocity (the right tank's projectile).
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{power.png} 
+		\caption{Power module logic}
+	\end{center}
+\end{figure}
+
+This module calculates a multiplier that represents how fast the projectile will be shot. It basically is a modified debouncer. When a counter overflows, another counter is incremented. When the button is released and is at a low signal, whatever value is in the second counter is outputted. The second counter is updated by an adder. The input to this adder is the value of the register itself and either a 1 or a 0. If the value of the first counter overflowed and is now a 0, and the value of the second counter is less than 7 (the max multiplier), we add 1. Otherwise, we add 0, thereby keeping the value constant. When the button signal is low, all regesters are reset to 0. 
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{prienc.png} 
+		\caption{Velocity module logic}
+	\end{center}
+\end{figure}
+
+This module basically uses a series of comparators and MUXes to make a huge switch statement. This is used to find what a velocity should be, given an angle input and input of a list of possible velocities.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{init.png} 
+		\caption{Init logic module}
+	\end{center}
+\end{figure}
+
+This module specifies what value init should be. It uses comparators to determine if the x or y location of the projectile is off the screen. If this is the case, or if the reset or collision flags are triggered, init is set to 0. Otherwise, it uses logic from the output of the power module to determine if init should be set to 1. Init should only be set to one if power outputs a non-zero value and init is currently 0.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{coldet.png} 
+		\caption{Collision detector module logic}
+	\end{center}
+\end{figure}
+
+This module checks if either projectile has collided with the other tank. It does this by using comparators to see if the projectile's x and y locations are within the tank's x and y locations. A subtractor is used to check the y range. An adder is used on the projectile traveling right because we need to check if the right side of the projectile collided with the left side of the tank.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=1\textwidth]{sevenseg.png} 
+		\caption{Seven segment display module logic}
+	\end{center}
+\end{figure}
+
+This module displayes tank health on the seven segment display. It takes in a fast clock to switch between the segments quickly. To determine which segment to display the number for, we have a 2 bit counter that overflows back to 0. We used 4 comparators to determine which of the 4 segments should display (if the counter is 0, display the first segment, if the counter is 1, display the second, and so on). Each of the tank healths are passed into a divider. The result represents the tens digit of health, and the remainder represents the ones digit. We pass these values into a MUX, which is selected by whatever segment is displaying from the counter. Then, this number is cast to 4 bits. We can do this because we know the number has to be 0-9. This number is then passed into two MUXes. These MUXes determine what bits should be lit up on the segment. We have two because when playing the game, the two players will be facing different directions, so we flipped the numbers on one side of the seven segment display for easier reading. The results of both of these MUXes are passed into another MUX which determines whether it should used the flipped number or not based on the segment being displayed. The seg and an values are the outputs to the board.
 
 \begin{figure}[H]
 	\begin{center}
