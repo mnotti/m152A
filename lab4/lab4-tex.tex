@@ -159,8 +159,41 @@ The above image is the digital design logic for a black box included in the diag
 %during simulation, and provide simulation waveforms. Include all simulation
 %testbench code source files.
 
+We took a relatively dynamic approach to the simulation aspect of our project; whenever we implemented a new module, we tested it immediately as the Game was relatively cumulative.  In other words, we had to build up from our simulation and test functionality from there.  These efforts included: displaying colors to verify our understanding and implementation of our VGA module, displaying a single tank which passed in it's coordinates to the VGA module, displaying (with the right speed for a correct visual effect) a projectile being shot from the tank, creating two tanks, and finally collision testing.  
+ \\
+ \\
+Initially, our simulation efforts were focused on the VGA module, as having the display was obviously a necessity to testing our overall project.  We did so by loading our VGA module onto our FPGA, and then switching the input on our monitor.  Originally, we merely attempted to have the screen display a single color (Green) just to verify if our VGA module was working at all, and after many efforts, we were successful.  Afterwards, we attempted to display both Green and Blue (Green for the floor/grass and blue for the sky), which again was successful.
+\\
+\\
+The consequent simulation efforts were much more of a challenge, as we were attempting to display a ''tank'' (a square) at a specific location, with the input coming from a tank module.  Because we believed our code to be correct but the tank was not being displayed, we created a test bench file.  This allowed us to create an instantiation and check the coordinates of our first tank via adding them to the waveform and using ''restart'' and ''run \# ms.''  We soon realized that our if statement checking the coordinates to draw a different color for the tank were incorrect, and after fixing and running this on the board once again, our desired outputs were correct.
+\\
+\\
+Afterwards, we attempted to simulate our projectile motion equations.  Once again, this was done simply by loading the program onto the FPGA board and continually shooting the projectile until we found it to match up with our expectations.  While the displaying of the projectile itself was not the challenge, attempting to find the correct clock speeds to make it look smooth without drag was very difficult.  This became exceedingly time consuming as we began using larger integer values which slowed down the synthesizing and generating process a great deal. 
+\\
+\\
+With a single tank working correctly, the next objective was to display two tanks, however this proved to be our biggest challenge.  For the longest time, we were unable to display two tanks, and so we attempted to simulate via a test bench file.  This reaffirmed that the second tank was passing in the correct coordinates at the correct time in our displaying if statement, however the tank would still not be drawn correctly.  We finally realized our problem when we changed the second tank to be twice as large; the second tank was simply being drawn over the first tank so it would essentially be invisible.  This simulation effort led to our research and finding that there were certain limitations of initializing modules, and thus, we had to make the 2nd tank (as well as its projectile) a separate module altogether.            
+\\
+\\
+With two tanks correctly shooting and moving on screen, our final simulation efforts were focused on the collision of the projectiles and tank.  The biggest trouble was consistently hitting each other to verify the decrease in health, but we verified that our collision detector was working as hitting one another decreased the number on the FPGA board, which corresponded to the decreasing of health. 
+\\
+\\
+The simulation process for this lab was rather repetitive and simple in its process.  Once the VGA was working correctly, outside of very specific issues, our simulation came from simply loading the program onto the board and playing the game testing our functionality.  The simulation effort allowed us to carefully choose various values to make the game as clean, smooth, and precise as possible. 
+
+
 
 \section*{Conclusion}
+
+Compared to our previous labs, this particular project was much more organized.  We used separate modules this time, these included one for: power (strength of projectile), the VGA, the seven segment display, and movement.  While it wasn't ideal (as it was a bit repetitive), due to initialization of location problems, we had to have two separate, but identical modules for each tank and projectile.  
+\\
+\\
+The game itself was relatively simple and straightforward, yet enjoyable.  There were two tanks which were capable of moving left and right, and the objective was to shoot one another.  This was controlled by buttons to adjust angle and horizontal location, as well as the shoot button adjusting for strength.  Depending on how directly you get hit from the projectile, the damage was either 7 or 14 of your total 99 health.  Unlike many other tank games, this live multiplayer style was relatively different, and it allowed for a somewhat more novel idea. 
+\\
+\\
+The main difficulties we encountered were with the VGA module and projectile motion.  Attempting to have output on the monitor via the VGA was so precise, that any small mistakes led to no output at all.  The only ''solution to this'' was just testing over and over again after trying to fix what small bugs we found.  The projectile motion was troublesome at times, especially because of the numbers we had to use. For starters, because we could not use decimals in certain instances, we had to scale everything to a larger number in order emulate decimals.  On top of that, because no trigonometric functions exist in Verilog, we had to calculate and hard code various values for the angles.
+\\
+\\
+Overall, this project was absolutely the most enjoyable to work on.  It allowed for us to apply our knowledge learned in class to something we were able to exercise our creativity on.  Outside of giving more time for the project, the only ''modification'' for the lab would have been to allow the students to test the other projects.  
+
 
 
 %Conclusion (5%). Summary of the design. Difficulties you encountered, and
